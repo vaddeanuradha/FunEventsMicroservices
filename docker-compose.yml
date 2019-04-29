@@ -1,0 +1,140 @@
+version: '3.4'
+
+networks:
+    frontend:
+    backend:
+
+services:
+    eventservice:
+        build:
+            context: .\EventCatalogAPI
+            dockerfile: Dockerfile
+        image: event/eventapi
+        environment:
+            DatabaseServer: mssqlserver1
+            DatabaseName: EventDb
+            DatabaseUser: sa
+            DatabaseUserPassword: EventApi(!)
+            ExternalEventBaseUrl: http://localhost:5011
+        container_name: eventapi
+        ports:
+            - "5011:80"
+        networks:
+            - backend
+            - frontend
+        depends_on:
+            - mssqlserver1
+
+    cart1:
+        image: cartimage
+        build:
+            context: .\CartApi
+            dockerfile: Dockerfile
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            IdentityUrl: http://tokenserver1
+            ConnectionString: basket.data
+        container_name: cartapi3
+        ports:
+            - "5054:80"
+        networks:
+            - backend
+            - frontend
+        depends_on:
+            - basket.data
+            - tokenserver1
+            - rabbitmq
+
+    order1:
+        image: event/order
+        build:
+            context: .\OrderApi
+            dockerfile: Dockerfile
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            IdentityUrl: http://tokenserver1
+            SQLSERVER_HOST: eventdb1
+            SA_PASSWORD: EventApi(!)
+            DATABASE: OrdersDb1
+        container_name: orderapi1
+        ports:
+            - "5700:80"
+        networks:
+            - backend
+            - frontend
+        depends_on:
+            - mssqlserver1
+            - tokenserver1
+            - rabbitmq
+            
+
+    mssqlserver1:
+        image: "microsoft/mssql-server-linux:latest"
+        environment:
+            ACCEPT_EULA: Y
+            SA_PASSWORD: EventApi(!)
+        container_name: eventdb1
+        ports:
+            - "1447:1433"
+        networks:
+            - backend
+    webmvc1:
+        build:
+            context: .\WebMvc
+            dockerfile: Dockerfile
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            EventUrl: http://eventservice
+            IdentityUrl: http://192.168.0.22:5041
+            CallBackUrl: http://localhost:5400
+            CartUrl: http://cart1
+            OrderUrl: http://order1
+            StripePublicKey: pk_test_zfcyySXNVPmq6EKxzggXd6Iw00GBsgK1eJ
+            StripePrivateKey: sk_test_f92zqIcAAWko4seQIkFHtUTI00u5XwT4Nq
+        container_name: webevent1
+        ports:
+            - "5400:80"
+        networks:
+            - frontend
+        depends_on:
+            - eventservice
+            - tokenserver1
+            - cart1
+            - order1
+
+    tokenserver1:
+        build:
+            context: .\TokenServiceApi
+            dockerfile: Dockerfile
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            MvcClient: http://localhost:5400
+            BasketApiClient: http://localhost:5054
+            OrderApiClient: http://localhost:5700
+        container_name: tokenserviceapi2
+        ports:
+            - "5041:80"
+        networks:
+            - backend
+            - frontend
+        depends_on:
+            - mssqlserver1
+    basket.data:
+        image: redis
+        ports:
+            - "6377:6379"
+        networks:
+            - backend
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        hostname: myrabbitmq1
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+            - "5671:5671"
+        volumes:
+            - ~/rabbitmq:/var/lib/rabbitmq/mnesia
+        networks:
+            - backend
+

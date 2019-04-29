@@ -1,0 +1,16 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/FunEvents/v15/Server/sqlite3
+/CartApi/bin/Debug/netcoreapp2.0
+/CartApi/obj
+/EventCatalogAPI/bin/Debug/netcoreapp2.1
+/EventCatalogAPI/obj
+/obj/Docker
+/OrderApi/bin/Debug/netcoreapp2.0
+/OrderApi/obj
+/TokenServiceApi/bin/Debug/netcoreapp2.1
+/TokenServiceApi/obj
+/WebMvc/bin/Debug/netcoreapp2.1
+/WebMvc/obj
