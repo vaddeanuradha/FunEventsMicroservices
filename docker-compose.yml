@@ -85,7 +85,7 @@ services:
         environment:
             ASPNETCORE_ENVIRONMENT: Development
             EventUrl: http://eventservice
-            IdentityUrl: http://192.168.0.22:5041
+            IdentityUrl: http://IP-Address(192.168.1.17):5041
             CallBackUrl: http://localhost:5400
             CartUrl: http://cart1
             OrderUrl: http://order1
